@@ -2,63 +2,66 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-<title>Blackout Strike Mobile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Blackout Strike - Offline Battle Royale</title>
 <style>
   * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
   body, html { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', Arial, sans-serif; }
   #canvas-container { width: 100vw; height: 100vh; position: absolute; }
 
-  /* PUBG Style HUD */
+  /* Tactical HUD */
   #crosshair {
     position: absolute; top: 50%; left: 50%; width: 16px; height: 16px;
-    transform: translate(-50%, -50%); pointer-events: none;
+    transform: translate(-50%, -50%); pointer-events: none; display: none;
   }
-  #crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.85); }
+  #crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.9); }
   #crosshair::before { top: 7px; left: 0; width: 16px; height: 2px; }
   #crosshair::after { top: 0; left: 7px; width: 2px; height: 16px; }
 
-  #compass {
+  #top-bar {
     position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-    background: rgba(0,0,0,0.5); border: 1px solid #ffaa00; border-radius: 4px;
-    padding: 4px 18px; color: #ffaa00; font-weight: bold; font-size: 14px; letter-spacing: 2px;
+    display: flex; gap: 15px; pointer-events: none;
+  }
+  .hud-badge {
+    background: rgba(0,0,0,0.65); border: 1px solid #ffaa00; border-radius: 4px;
+    padding: 4px 14px; color: #ffaa00; font-weight: bold; font-size: 13px; letter-spacing: 1px;
   }
 
-  #hud {
+  #bottom-hud {
     position: absolute; bottom: 20px; left: 25px; color: #fff;
-    font-size: 18px; font-weight: bold; text-shadow: 1px 1px 4px #000; pointer-events: none;
+    font-size: 16px; font-weight: bold; text-shadow: 1px 1px 3px #000; pointer-events: none;
   }
-  .bar-container { width: 180px; height: 12px; background: rgba(0,0,0,0.6); border: 1px solid #555; margin-top: 5px; border-radius: 6px; overflow: hidden; }
-  #health-bar { width: 100%; height: 100%; background: #2ecc71; transition: width 0.2s; }
+  .bar-bg { width: 160px; height: 10px; background: rgba(0,0,0,0.6); border: 1px solid #666; margin-top: 5px; border-radius: 5px; overflow: hidden; }
+  #hp-bar { width: 100%; height: 100%; background: #2ecc71; }
 
-  /* Mobile Controls */
-  .touch-zone { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; touch-action: none; }
-  
-  /* Left Joystick */
+  /* Controls */
+  .touch-btn { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; touch-action: none; z-index: 10; }
   #joystick-base {
-    bottom: 40px; left: 40px; width: 120px; height: 120px;
-    background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4);
+    bottom: 35px; left: 35px; width: 110px; height: 110px;
+    background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3);
   }
   #joystick-knob {
-    width: 50px; height: 50px; background: rgba(255,170,0,0.7);
+    width: 45px; height: 45px; background: rgba(255,170,0,0.7);
     border-radius: 50%; pointer-events: none; transform: translate(0, 0);
   }
-
-  /* Right Action Buttons */
   #fire-btn {
-    bottom: 50px; right: 40px; width: 75px; height: 75px;
-    background: rgba(231,76,60,0.6); border: 3px solid #e74c3c; color: #fff; font-size: 16px; font-weight: bold;
+    bottom: 45px; right: 35px; width: 70px; height: 70px;
+    background: rgba(231,76,60,0.6); border: 3px solid #e74c3c; color: #fff; font-size: 14px; font-weight: bold;
+    display: none;
   }
   #scope-btn {
-    bottom: 140px; right: 45px; width: 60px; height: 60px;
-    background: rgba(52,152,219,0.5); border: 2px solid #3498db; color: #fff; font-size: 14px; font-weight: bold;
+    bottom: 125px; right: 40px; width: 55px; height: 55px;
+    background: rgba(52,152,219,0.5); border: 2px solid #3498db; color: #fff; font-size: 12px; font-weight: bold;
+    display: none;
+  }
+  #eject-btn {
+    bottom: 50%; right: 40px; transform: translateY(50%); width: 85px; height: 85px;
+    background: #e67e22; border: 3px solid #fff; color: #fff; font-size: 15px; font-weight: bold;
+    box-shadow: 0 0 15px #e67e22;
   }
 
-  /* Touch Look Area (Right Screen) */
-  #touch-look-zone {
-    position: absolute; top: 0; right: 0; width: 50vw; height: 100vh; z-index: 1;
-  }
-  .interactive-ui { z-index: 10; }
+  #touch-look-zone { position: absolute; top: 0; right: 0; width: 50vw; height: 100vh; z-index: 1; }
+  #banner { position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); color: #ffaa00; font-size: 26px; font-weight: bold; text-shadow: 2px 2px 6px #000; display: none; text-align: center; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -66,156 +69,217 @@
 
 <div id="canvas-container"></div>
 
-<!-- Visual HUD -->
-<div id="compass">N • 015 • NE</div>
-<div id="crosshair"></div>
-<div id="hud">
-  <div>AMMO: <span id="ammo-val" style="color: #ffaa00;">30</span> / ∞</div>
-  <div class="bar-container"><div id="health-bar"></div></div>
+<div id="top-bar">
+  <div class="hud-badge">ALIVE: <span id="alive-count">10</span></div>
+  <div class="hud-badge">ZONE: ACTIVE</div>
 </div>
 
-<!-- Touch Zones -->
+<div id="crosshair"></div>
+<div id="banner"></div>
+
+<div id="bottom-hud">
+  <div>WEAPON: <span id="weapon-name" style="color: #bbb;">NONE (Find Floor Loot)</span></div>
+  <div>AMMO: <span id="ammo-count" style="color: #ffaa00;">0</span></div>
+  <div class="bar-bg"><div id="hp-bar"></div></div>
+</div>
+
 <div id="touch-look-zone"></div>
-<div id="joystick-base" class="touch-zone interactive-ui"><div id="joystick-knob"></div></div>
-<div id="fire-btn" class="touch-zone interactive-ui">FIRE</div>
-<div id="scope-btn" class="touch-zone interactive-ui">SCOPE</div>
+<div id="joystick-base" class="touch-btn"><div id="joystick-knob"></div></div>
+<div id="fire-btn" class="touch-btn">FIRE</div>
+<div id="scope-btn" class="touch-btn">SCOPE</div>
+<div id="eject-btn" class="touch-btn">EJECT</div>
 
 <script>
-// --- AUDIO SYNTHESIZER (GUNSHOT SFX) ---
+// --- AUDIO SYSTEM ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playGunshot() {
+function playShotSound() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
-  let bufferSize = audioCtx.sampleRate * 0.15;
-  let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  let data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
-  let noise = audioCtx.createBufferSource();
-  noise.buffer = buffer;
-
+  let buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.12, audioCtx.sampleRate);
+  let data = buf.getChannelData(0);
+  for (let i = 0; i < buf.length; i++) data[i] = Math.random() * 2 - 1;
+  let src = audioCtx.createBufferSource();
+  src.buffer = buf;
   let filter = audioCtx.createBiquadFilter();
   filter.type = 'bandpass';
-  filter.frequency.value = 1000;
-
+  filter.frequency.value = 1200;
   let gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-
-  noise.connect(filter);
+  gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+  src.connect(filter);
   filter.connect(gain);
   gain.connect(audioCtx.destination);
-  noise.start();
+  src.start();
 }
 
-// --- 3D SCENE SETUP ---
+// --- 3D SCENE & RENDERER ---
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb); // Realistic Sky
-scene.fog = new THREE.FogExp2(0x87ceeb, 0.012);
+scene.background = new THREE.Color(0x87ceeb);
+scene.fog = new THREE.FogExp2(0x87ceeb, 0.007);
 
 const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-// Lighting (Sunlight + Ambient)
+// Lighting
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
 scene.add(hemiLight);
+const sun = new THREE.DirectionalLight(0xfff3d6, 1.2);
+sun.position.set(100, 150, 50);
+sun.castShadow = true;
+scene.add(sun);
 
-const dirLight = new THREE.DirectionalLight(0xfffaed, 1.2);
-dirLight.position.set(40, 80, 40);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 1024;
-dirLight.shadow.mapSize.height = 1024;
-scene.add(dirLight);
+// --- MEDIUM-POLY ISLAND TERRAIN ---
+const terrainSize = 600;
+const groundGeo = new THREE.PlaneGeometry(terrainSize, terrainSize, 48, 48);
+const pos = groundGeo.attributes.position;
+for (let i = 0; i < pos.count; i++) {
+  let vx = pos.getX(i);
+  let vy = pos.getY(i);
+  // Rolling hills height calculation
+  let z = Math.sin(vx * 0.02) * Math.cos(vy * 0.02) * 8 + Math.sin(vx * 0.05) * 3;
+  pos.setZ(i, z);
+}
+groundGeo.computeVertexNormals();
 
-// --- TERRAIN & ENVIRONMENT ---
-const groundGeo = new THREE.PlaneGeometry(600, 600, 32, 32);
-const groundMat = new THREE.MeshStandardMaterial({ color: 0x4b5320, roughness: 0.8 }); // Military Olive Green Ground
-const ground = new THREE.Mesh(groundGeo, groundMat);
-ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
-scene.add(ground);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x556b2f, roughness: 0.9, flatShading: true });
+const terrain = new THREE.Mesh(groundGeo, groundMat);
+terrain.rotation.x = -Math.PI / 2;
+terrain.receiveShadow = true;
+scene.add(terrain);
 
-// Add Military Bunkers / Crates
-const boxMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
-for (let i = 0; i < 35; i++) {
-  let box = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 4), boxMat);
-  box.position.set((Math.random() - 0.5) * 200, 1.5, (Math.random() - 0.5) * 200);
-  box.castShadow = true;
-  box.receiveShadow = true;
-  scene.add(box);
+// Environment: Crates & Watchtowers
+const crateMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.7 });
+for (let i = 0; i < 40; i++) {
+  let crate = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 3), crateMat);
+  crate.position.set((Math.random() - 0.5) * 400, 1.5, (Math.random() - 0.5) * 400);
+  crate.castShadow = true;
+  scene.add(crate);
 }
 
-// --- TACTICAL PLAYER MODEL (NOT A CAPSULE) ---
-const playerGroup = new THREE.Group();
-const tacticalVestMat = new THREE.MeshStandardMaterial({ color: 0x2b2b2b, roughness: 0.6 }); // Black armor
-const skinMat = new THREE.MeshStandardMaterial({ color: 0xc68642, roughness: 0.7 });
-const camoPants = new THREE.MeshStandardMaterial({ color: 0x3b443b, roughness: 0.8 });
+// --- DROPSHIP / MILITARY PLANE ---
+const planeGroup = new THREE.Group();
+const planeMat = new THREE.MeshStandardMaterial({ color: 0x4a535c, roughness: 0.5 });
+const fuselage = new THREE.Mesh(new THREE.BoxGeometry(8, 6, 26), planeMat);
+const wings = new THREE.Mesh(new THREE.BoxGeometry(40, 0.6, 6), planeMat);
+wings.position.set(0, 1, 0);
+planeGroup.add(fuselage);
+planeGroup.add(wings);
+planeGroup.position.set(-200, 120, -200);
+scene.add(planeGroup);
 
-// Head & Tactical Helmet
+// --- TACTICAL PLAYER MODEL ---
+const playerGroup = new THREE.Group();
+const armorMat = new THREE.MeshStandardMaterial({ color: 0x242424 });
+const skinMat = new THREE.MeshStandardMaterial({ color: 0xd2a679 });
+const camoMat = new THREE.MeshStandardMaterial({ color: 0x3d4838, roughness: 0.8 });
+
+// Head & Helmet
 const head = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), skinMat);
 head.position.y = 1.95;
-const helmet = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 0.5), tacticalVestMat);
+const helmet = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 0.5), armorMat);
 helmet.position.y = 2.15;
 playerGroup.add(head);
 playerGroup.add(helmet);
 
 // Torso / Plate Carrier
-const torso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.9, 0.45), tacticalVestMat);
+const torso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.9, 0.45), armorMat);
 torso.position.y = 1.3;
 torso.castShadow = true;
 playerGroup.add(torso);
 
-// Arms holding rifle
-const armRight = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.7, 0.22), skinMat);
-armRight.position.set(0.5, 1.3, -0.3);
-armRight.rotation.x = -Math.PI / 3;
-playerGroup.add(armRight);
+// Gun (Hidden until floor pickup)
+const heldGun = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 1.1), armorMat);
+heldGun.position.set(0.4, 1.1, -0.6);
+heldGun.visible = false;
+playerGroup.add(heldGun);
 
-// Tactical M416 Gun Mesh
-const gunGroup = new THREE.Group();
-const gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 1.2), tacticalVestMat);
-const gunBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4), tacticalVestMat);
-gunBarrel.rotation.x = Math.PI / 2;
-gunBarrel.position.set(0, 0.05, -0.7);
-gunGroup.add(gunBody);
-gunGroup.add(gunBarrel);
-gunGroup.position.set(0.4, 1.1, -0.6);
-playerGroup.add(gunGroup);
-
-// Legs
-const legLeft = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.85, 0.3), camoPants);
-legLeft.position.set(-0.25, 0.45, 0);
-legLeft.castShadow = true;
-playerGroup.add(legLeft);
-
-const legRight = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.85, 0.3), camoPants);
-legRight.position.set(0.25, 0.45, 0);
-legRight.castShadow = true;
-playerGroup.add(legRight);
+// Limbs
+const legL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.85, 0.3), camoMat);
+legL.position.set(-0.25, 0.45, 0);
+const legR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.85, 0.3), camoMat);
+legR.position.set(0.25, 0.45, 0);
+playerGroup.add(legL);
+playerGroup.add(legR);
 
 scene.add(playerGroup);
+playerGroup.visible = false;
 
-// --- ENEMY TARGETS ---
-const enemies = [];
-const enemyMat = new THREE.MeshStandardMaterial({ color: 0xb22222 }); // Red Combatants
-for (let i = 0; i < 5; i++) {
-  let enemy = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 0.6), enemyMat);
-  enemy.position.set((Math.random() - 0.5) * 80, 1, -20 - Math.random() * 50);
-  enemy.castShadow = true;
-  scene.add(enemy);
-  enemies.push(enemy);
+// --- FLOOR LOOT (GUNS ON THE GROUND) ---
+const floorGuns = [];
+for (let i = 0; i < 15; i++) {
+  let gunPickup = new THREE.Group();
+  let gunMesh = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.2, 1.2), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+  let halo = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.1, 16), new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true }));
+  gunPickup.add(gunMesh);
+  gunPickup.add(halo);
+
+  gunPickup.position.set((Math.random() - 0.5) * 350, 0.8, (Math.random() - 0.5) * 350);
+  scene.add(gunPickup);
+  floorGuns.push(gunPickup);
 }
 
-// --- CONTROLS & CAMERA LOGIC ---
+// --- 3D ENEMY BOTS ---
+const enemies = [];
+for (let i = 0; i < 9; i++) {
+  let bot = new THREE.Group();
+  let botBody = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.8, 0.5), new THREE.MeshStandardMaterial({ color: 0x8b0000 }));
+  botBody.position.y = 0.9;
+  botBody.castShadow = true;
+  bot.add(botBody);
+
+  let botGun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 1), armorMat);
+  botGun.position.set(0.4, 1.0, -0.4);
+  bot.add(botGun);
+
+  bot.position.set((Math.random() - 0.5) * 300, 0, (Math.random() - 0.5) * 300);
+  bot.userData = { health: 100, alive: true };
+  scene.add(bot);
+  enemies.push(bot);
+}
+
+// --- GAME LOGIC & STATE ---
+let gameState = "PLANE"; // PLANE, JUMPING, PLAYING
+let health = 100;
+let ammo = 0;
+let hasGun = false;
+let aliveBots = 9;
 let moveX = 0, moveZ = 0;
 let pitch = 0, yaw = 0;
 let isAiming = false;
-let ammo = 30;
 
-// Dual Touch Controls
+// Eject Button Logic
+const ejectBtn = document.getElementById('eject-btn');
+ejectBtn.onclick = () => {
+  gameState = "JUMPING";
+  ejectBtn.style.display = 'none';
+  document.getElementById('crosshair').style.display = 'block';
+  playerGroup.position.copy(planeGroup.position);
+  playerGroup.visible = true;
+};
+
+// Loot Pickup Check
+function checkFloorLoot() {
+  for (let i = floorGuns.length - 1; i >= 0; i--) {
+    let gun = floorGuns[i];
+    gun.rotation.y += 0.03;
+    if (playerGroup.position.distanceTo(gun.position) < 3.0 && !hasGun) {
+      hasGun = true;
+      ammo = 90;
+      heldGun.visible = true;
+      document.getElementById('weapon-name').innerText = "M416 (Assault Rifle)";
+      document.getElementById('weapon-name').style.color = "#ffaa00";
+      document.getElementById('ammo-count').innerText = ammo;
+      document.getElementById('fire-btn').style.display = 'flex';
+      document.getElementById('scope-btn').style.display = 'flex';
+      scene.remove(gun);
+      floorGuns.splice(i, 1);
+    }
+  }
+}
+
+// --- TOUCH & MOBILE CAM CONTROLS ---
 const touchLookZone = document.getElementById('touch-look-zone');
 let lastTouchX = 0, lastTouchY = 0;
 
@@ -226,33 +290,29 @@ touchLookZone.addEventListener('touchstart', (e) => {
 
 touchLookZone.addEventListener('touchmove', (e) => {
   let touch = e.touches[0];
-  let deltaX = touch.clientX - lastTouchX;
-  let deltaY = touch.clientY - lastTouchY;
+  let dx = touch.clientX - lastTouchX;
+  let dy = touch.clientY - lastTouchY;
   lastTouchX = touch.clientX;
   lastTouchY = touch.clientY;
 
-  yaw -= deltaX * 0.006;
-  pitch = Math.max(-0.6, Math.min(0.6, pitch - deltaY * 0.006));
+  yaw -= dx * 0.005;
+  pitch = Math.max(-0.6, Math.min(0.6, pitch - dy * 0.005));
 });
 
-// Joystick Movement Logic
+// Joystick
 const joyBase = document.getElementById('joystick-base');
 const joyKnob = document.getElementById('joystick-knob');
 let baseRect = joyBase.getBoundingClientRect();
 
 joyBase.addEventListener('touchmove', (e) => {
   let t = e.touches[0];
-  let dx = t.clientX - (baseRect.left + 60);
-  let dy = t.clientY - (baseRect.top + 60);
-  let dist = Math.min(45, Math.hypot(dx, dy));
+  let dx = t.clientX - (baseRect.left + 55);
+  let dy = t.clientY - (baseRect.top + 55);
+  let dist = Math.min(40, Math.hypot(dx, dy));
   let angle = Math.atan2(dy, dx);
-
-  let kx = Math.cos(angle) * dist;
-  let ky = Math.sin(angle) * dist;
-  joyKnob.style.transform = `translate(${kx}px, ${ky}px)`;
-
-  moveX = kx / 45;
-  moveZ = ky / 45;
+  joyKnob.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`;
+  moveX = (Math.cos(angle) * dist) / 40;
+  moveZ = (Math.sin(angle) * dist) / 40;
 });
 
 joyBase.addEventListener('touchend', () => {
@@ -260,30 +320,38 @@ joyBase.addEventListener('touchend', () => {
   moveX = 0; moveZ = 0;
 });
 
-// Scope Button Toggle
+// Fire & Scope
 document.getElementById('scope-btn').onclick = () => {
   isAiming = !isAiming;
-  camera.fov = isAiming ? 32 : 65; // 2x/4x Zoom effect
+  camera.fov = isAiming ? 30 : 65;
   camera.updateProjectionMatrix();
 };
 
-// Fire Button Logic
 document.getElementById('fire-btn').onclick = () => {
   if (ammo > 0) {
     ammo--;
-    document.getElementById('ammo-val').innerText = ammo;
-    playGunshot();
+    document.getElementById('ammo-count').innerText = ammo;
+    playShotSound();
 
-    // Muzzle flash / Recoil
-    gunGroup.position.z += 0.08;
-    setTimeout(() => gunGroup.position.z -= 0.08, 60);
-
-    // Hitscan check
+    // Hitscan detection
     let raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-    let hits = raycaster.intersectObjects(enemies);
+    let hitables = enemies.map(e => e.children[0]);
+    let hits = raycaster.intersectObjects(hitables);
     if (hits.length > 0) {
-      hits[0].object.position.y = -10; // Eliminate target
+      let enemyParent = hits[0].object.parent;
+      enemyParent.userData.health -= 35;
+      if (enemyParent.userData.health <= 0 && enemyParent.userData.alive) {
+        enemyParent.userData.alive = false;
+        scene.remove(enemyParent);
+        aliveBots--;
+        document.getElementById('alive-count').innerText = aliveBots + 1;
+        if (aliveBots === 0) {
+          let b = document.getElementById('banner');
+          b.innerText = "WINNER WINNER CHICKEN DINNER!";
+          b.style.display = 'block';
+        }
+      }
     }
   }
 };
@@ -292,21 +360,65 @@ document.getElementById('fire-btn').onclick = () => {
 function animate() {
   requestAnimationFrame(animate);
 
-  // Rotation & Direction
-  playerGroup.rotation.y = yaw;
+  if (gameState === "PLANE") {
+    // Flight Path
+    planeGroup.position.x += 0.5;
+    planeGroup.position.z += 0.5;
+    camera.position.set(planeGroup.position.x - 20, planeGroup.position.y + 15, planeGroup.position.z - 25);
+    camera.lookAt(planeGroup.position);
 
-  // Move player relative to view angle
-  let forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
-  let right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+  } else if (gameState === "JUMPING") {
+    // Skydiving / Freefall
+    playerGroup.position.y -= 0.6;
+    playerGroup.position.x += Math.sin(yaw) * 0.3;
+    playerGroup.position.z += Math.cos(yaw) * 0.3;
 
-  playerGroup.position.addScaledVector(forward, -moveZ * 0.22);
-  playerGroup.position.addScaledVector(right, moveX * 0.22);
+    if (playerGroup.position.y <= 0) {
+      playerGroup.position.y = 0;
+      gameState = "PLAYING";
+    }
+    camera.position.set(playerGroup.position.x, playerGroup.position.y + 6, playerGroup.position.z + 10);
+    camera.lookAt(playerGroup.position);
 
-  // Camera Over-The-Shoulder (PUBG TPS View)
-  let camOffset = new THREE.Vector3(isAiming ? 0.8 : 1.4, isAiming ? 1.8 : 2.2, isAiming ? 2.0 : 4.0);
-  camOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
-  camera.position.copy(playerGroup.position).add(camOffset);
-  camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.8 + pitch * 3, playerGroup.position.z);
+  } else if (gameState === "PLAYING") {
+    // Normal TPS Ground Movement
+    playerGroup.rotation.y = yaw;
+    let forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+    let right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    playerGroup.position.addScaledVector(forward, -moveZ * 0.25);
+    playerGroup.position.addScaledVector(right, moveX * 0.25);
+
+    // Over-the-shoulder camera
+    let camOffset = new THREE.Vector3(isAiming ? 0.7 : 1.3, isAiming ? 1.7 : 2.2, isAiming ? 1.8 : 3.8);
+    camOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+    camera.position.copy(playerGroup.position).add(camOffset);
+    camera.lookAt(playerGroup.position.x, playerGroup.position.y + 1.8 + pitch * 3, playerGroup.position.z);
+
+    checkFloorLoot();
+
+    // AI Bot Patrol & Attack Logic
+    enemies.forEach(bot => {
+      if (!bot.userData.alive) return;
+      let dist = bot.position.distanceTo(playerGroup.position);
+      if (dist < 40) {
+        bot.lookAt(playerGroup.position.x, bot.position.y, playerGroup.position.z);
+        if (dist > 8) {
+          bot.translateZ(0.08); // Pursue player
+        }
+        if (Math.random() < 0.015) { // Shoot player
+          playShotSound();
+          health = Math.max(0, health - 5);
+          document.getElementById('hp-bar').style.width = health + "%";
+          if (health <= 0) {
+            let b = document.getElementById('banner');
+            b.innerText = "YOU WERE ELIMINATED";
+            b.style.color = "#e74c3c";
+            b.style.display = 'block';
+          }
+        }
+      }
+    });
+  }
 
   renderer.render(scene, camera);
 }
@@ -320,8 +432,4 @@ window.addEventListener('resize', () => {
 animate();
 </script>
 </body>
-  </html>
-
-
-
-  
+</html>
